@@ -1,6 +1,7 @@
 package memcachedkv
 
 import (
+	stderr "errors"
 	"strings"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type driver struct {
+type Driver struct {
 	client *memcache.Client
 	log    *zap.Logger
 	cfg    *Config
@@ -20,10 +21,10 @@ type driver struct {
 // NewMemcachedDriver returns a memcache client using the provided server(s)
 // with equal weight. If a server is listed multiple times,
 // it gets a proportional amount of weight.
-func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
+func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*Driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
-	s := &driver{
+	s := &Driver{
 		log: log,
 	}
 
@@ -44,7 +45,7 @@ func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin config.Configurer
 }
 
 // Has checks the key for existence
-func (d *driver) Has(keys ...string) (map[string]bool, error) {
+func (d *Driver) Has(keys ...string) (map[string]bool, error) {
 	const op = errors.Op("memcached_plugin_has")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -59,7 +60,7 @@ func (d *driver) Has(keys ...string) (map[string]bool, error) {
 
 		if err != nil {
 			// ErrCacheMiss means that a Get failed because the item wasn't present.
-			if err == memcache.ErrCacheMiss {
+			if stderr.Is(err, memcache.ErrCacheMiss) {
 				continue
 			}
 			return nil, errors.E(op, err)
@@ -73,7 +74,7 @@ func (d *driver) Has(keys ...string) (map[string]bool, error) {
 
 // Get gets the item for the given key. ErrCacheMiss is returned for a
 // memcache cache miss. The key must be at most 250 bytes in length.
-func (d *driver) Get(key string) ([]byte, error) {
+func (d *Driver) Get(key string) ([]byte, error) {
 	const op = errors.Op("memcached_plugin_get")
 	// to get cases like "  "
 	keyTrimmed := strings.TrimSpace(key)
@@ -83,7 +84,7 @@ func (d *driver) Get(key string) ([]byte, error) {
 	data, err := d.client.Get(key)
 	if err != nil {
 		// ErrCacheMiss means that a Get failed because the item wasn't present.
-		if err == memcache.ErrCacheMiss {
+		if stderr.Is(err, memcache.ErrCacheMiss) {
 			return nil, nil
 		}
 		return nil, errors.E(op, err)
@@ -98,7 +99,7 @@ func (d *driver) Get(key string) ([]byte, error) {
 
 // MGet return map with key -- string
 // and map value as value -- []byte
-func (d *driver) MGet(keys ...string) (map[string][]byte, error) {
+func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
 	const op = errors.Op("memcached_plugin_mget")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -118,7 +119,7 @@ func (d *driver) MGet(keys ...string) (map[string][]byte, error) {
 		data, err := d.client.Get(keys[i])
 		if err != nil {
 			// ErrCacheMiss means that a Get failed because the item wasn't present.
-			if err == memcache.ErrCacheMiss {
+			if stderr.Is(err, memcache.ErrCacheMiss) {
 				continue
 			}
 			return nil, errors.E(op, err)
@@ -136,7 +137,7 @@ func (d *driver) MGet(keys ...string) (map[string][]byte, error) {
 // Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *driver) Set(items ...*kvv1.Item) error {
+func (d *Driver) Set(items ...*kvv1.Item) error {
 	const op = errors.Op("memcached_plugin_set")
 	if items == nil {
 		return errors.E(op, errors.NoKeys)
@@ -177,7 +178,7 @@ func (d *driver) Set(items ...*kvv1.Item) error {
 // MExpire Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *driver) MExpire(items ...*kvv1.Item) error {
+func (d *Driver) MExpire(items ...*kvv1.Item) error {
 	const op = errors.Op("memcached_plugin_mexpire")
 	for i := range items {
 		if items[i] == nil {
@@ -207,12 +208,12 @@ func (d *driver) MExpire(items ...*kvv1.Item) error {
 }
 
 // TTL return time in seconds (int32) for a given keys
-func (d *driver) TTL(_ ...string) (map[string]string, error) {
+func (d *Driver) TTL(_ ...string) (map[string]string, error) {
 	const op = errors.Op("memcached_plugin_ttl")
 	return nil, errors.E(op, errors.Str("not valid request for memcached, see https://github.com/memcached/memcached/issues/239"))
 }
 
-func (d *driver) Delete(keys ...string) error {
+func (d *Driver) Delete(keys ...string) error {
 	const op = errors.Op("memcached_plugin_has")
 	if keys == nil {
 		return errors.E(op, errors.NoKeys)
@@ -231,7 +232,7 @@ func (d *driver) Delete(keys ...string) error {
 		// ErrCacheMiss means that a Get failed because the item wasn't present.
 		if err != nil {
 			// ErrCacheMiss means that a Get failed because the item wasn't present.
-			if err == memcache.ErrCacheMiss {
+			if stderr.Is(err, memcache.ErrCacheMiss) {
 				continue
 			}
 			return errors.E(op, err)
@@ -240,7 +241,7 @@ func (d *driver) Delete(keys ...string) error {
 	return nil
 }
 
-func (d *driver) Clear() error {
+func (d *Driver) Clear() error {
 	err := d.client.DeleteAll()
 	if err != nil {
 		d.log.Error("flush_all operation failed", zap.Error(err))
@@ -250,6 +251,6 @@ func (d *driver) Clear() error {
 	return nil
 }
 
-func (d *driver) Stop() {
+func (d *Driver) Stop() {
 	// not implemented https://github.com/bradfitz/gomemcache/issues/51
 }
