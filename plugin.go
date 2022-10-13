@@ -1,10 +1,9 @@
 package memcached
 
 import (
-	"github.com/roadrunner-server/api/v2/plugins/config"
-	"github.com/roadrunner-server/api/v2/plugins/kv"
 	"github.com/roadrunner-server/errors"
-	"github.com/roadrunner-server/memcached/v2/memcachedkv"
+	"github.com/roadrunner-server/memcached/v3/memcachedkv"
+	"github.com/roadrunner-server/sdk/v3/plugins/kv"
 	"go.uber.org/zap"
 )
 
@@ -13,14 +12,21 @@ const (
 	RootPluginName string = "kv"
 )
 
+type Configurer interface {
+	// UnmarshalKey takes a single key and unmarshal it into a Struct.
+	UnmarshalKey(name string, out any) error
+	// Has checks if config section exists.
+	Has(name string) bool
+}
+
 type Plugin struct {
 	// config plugin
-	cfgPlugin config.Configurer
+	cfgPlugin Configurer
 	// logger
 	log *zap.Logger
 }
 
-func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log *zap.Logger, cfg Configurer) error {
 	if !cfg.Has(RootPluginName) {
 		return errors.E(errors.Disabled)
 	}

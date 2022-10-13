@@ -6,11 +6,17 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/roadrunner-server/errors"
 	kvv1 "go.buf.build/protocolbuffers/go/roadrunner-server/api/proto/kv/v1"
 	"go.uber.org/zap"
 )
+
+type Configurer interface {
+	// UnmarshalKey takes a single key and unmarshal it into a Struct.
+	UnmarshalKey(name string, out any) error
+	// Has checks if config section exists.
+	Has(name string) bool
+}
 
 type Driver struct {
 	client *memcache.Client
@@ -21,7 +27,7 @@ type Driver struct {
 // NewMemcachedDriver returns a memcache client using the provided server(s)
 // with equal weight. If a server is listed multiple times,
 // it gets a proportional amount of weight.
-func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*Driver, error) {
+func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer) (*Driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
 	s := &Driver{
