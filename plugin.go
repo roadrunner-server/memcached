@@ -1,9 +1,9 @@
 package memcached
 
 import (
+	"github.com/roadrunner-server/api/v3/plugins/v1/kv"
 	"github.com/roadrunner-server/errors"
 	"github.com/roadrunner-server/memcached/v3/memcachedkv"
-	"github.com/roadrunner-server/sdk/v3/plugins/kv"
 	"go.uber.org/zap"
 )
 
@@ -19,6 +19,10 @@ type Configurer interface {
 	Has(name string) bool
 }
 
+type Logger interface {
+	NamedLogger(name string) *zap.Logger
+}
+
 type Plugin struct {
 	// config plugin
 	cfgPlugin Configurer
@@ -26,14 +30,13 @@ type Plugin struct {
 	log *zap.Logger
 }
 
-func (p *Plugin) Init(log *zap.Logger, cfg Configurer) error {
+func (p *Plugin) Init(log Logger, cfg Configurer) error {
 	if !cfg.Has(RootPluginName) {
 		return errors.E(errors.Disabled)
 	}
 
 	p.cfgPlugin = cfg
-	p.log = new(zap.Logger)
-	*p.log = *log
+	p.log = log.NamedLogger(PluginName)
 	return nil
 }
 

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/roadrunner-server/api/v3/plugins/v1/kv"
 	"github.com/roadrunner-server/errors"
-	kvv1 "go.buf.build/protocolbuffers/go/roadrunner-server/api/kv/v1"
 	"go.uber.org/zap"
 )
 
@@ -143,7 +143,7 @@ func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
 // Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *Driver) Set(items ...*kvv1.Item) error {
+func (d *Driver) Set(items ...kv.Item) error {
 	const op = errors.Op("memcached_plugin_set")
 	if items == nil {
 		return errors.E(op, errors.NoKeys)
@@ -156,16 +156,16 @@ func (d *Driver) Set(items ...*kvv1.Item) error {
 
 		// pre-allocate item
 		memcachedItem := &memcache.Item{
-			Key: items[i].Key,
+			Key: items[i].Key(),
 			// unsafe convert
-			Value: items[i].Value,
+			Value: items[i].Value(),
 			Flags: 0,
 		}
 
 		// add additional TTL in case of TTL isn't empty
-		if items[i].Timeout != "" {
+		if items[i].Timeout() != "" {
 			// verify the TTL
-			t, err := time.Parse(time.RFC3339, items[i].Timeout)
+			t, err := time.Parse(time.RFC3339, items[i].Timeout())
 			if err != nil {
 				return err
 			}
@@ -184,18 +184,18 @@ func (d *Driver) Set(items ...*kvv1.Item) error {
 // MExpire Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *Driver) MExpire(items ...*kvv1.Item) error {
+func (d *Driver) MExpire(items ...kv.Item) error {
 	const op = errors.Op("memcached_plugin_mexpire")
 	for i := range items {
 		if items[i] == nil {
 			continue
 		}
-		if items[i].Timeout == "" || strings.TrimSpace(items[i].Key) == "" {
+		if items[i].Timeout() == "" || strings.TrimSpace(items[i].Key()) == "" {
 			return errors.E(op, errors.Str("should set timeout and at least one key"))
 		}
 
 		// verify provided TTL
-		t, err := time.Parse(time.RFC3339, items[i].Timeout)
+		t, err := time.Parse(time.RFC3339, items[i].Timeout())
 		if err != nil {
 			return errors.E(op, err)
 		}
@@ -205,7 +205,7 @@ func (d *Driver) MExpire(items ...*kvv1.Item) error {
 		// into the future at which time the item will expire. Zero means the item has
 		// no expiration time. ErrCacheMiss is returned if the key is not in the cache.
 		// The key must be at most 250 bytes in length.
-		err = d.client.Touch(items[i].Key, int32(t.Unix()))
+		err = d.client.Touch(items[i].Key(), int32(t.Unix()))
 		if err != nil {
 			return errors.E(op, err)
 		}
