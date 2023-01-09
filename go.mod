@@ -1,4 +1,4 @@
-module github.com/roadrunner-server/memcached/v3
+module github.com/roadrunner-server/memcached/v4
 
 go 1.19
 
