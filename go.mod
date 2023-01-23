@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20221031212613-62deef7fc822
-	github.com/roadrunner-server/api/v3 v3.1.2
+	github.com/roadrunner-server/api/v3 v3.2.1
 	github.com/roadrunner-server/errors v1.2.0
 	go.uber.org/zap v1.24.0
 )
