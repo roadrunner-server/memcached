@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/roadrunner-server/api/v3/plugins/v1/kv"
+	"github.com/roadrunner-server/api/v4/plugins/v1/kv"
 	"github.com/roadrunner-server/errors"
 	"go.uber.org/zap"
 )
