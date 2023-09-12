@@ -8,6 +8,8 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/roadrunner-server/api/v4/plugins/v1/kv"
 	"github.com/roadrunner-server/errors"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )
 
@@ -19,19 +21,21 @@ type Configurer interface {
 }
 
 type Driver struct {
-	client *memcache.Client
+	client *otelmemcache.Client
 	log    *zap.Logger
 	cfg    *Config
+	tracer *sdktrace.TracerProvider
 }
 
 // NewMemcachedDriver returns a memcache client using the provided server(s)
 // with equal weight. If a server is listed multiple times,
 // it gets a proportional amount of weight.
-func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer) (*Driver, error) {
+func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer, tracer *sdktrace.TracerProvider) (*Driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
 	s := &Driver{
-		log: log,
+		log:    log,
+		tracer: tracer,
 	}
 
 	err := cfgPlugin.UnmarshalKey(key, &s.cfg)
@@ -45,7 +49,8 @@ func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer) (*Dri
 
 	s.cfg.InitDefaults()
 
-	s.client = memcache.New(s.cfg.Addr...)
+	client := memcache.New(s.cfg.Addr...)
+	s.client = otelmemcache.NewClientWithTracing(client, otelmemcache.WithTracerProvider(tracer))
 
 	return s, nil
 }
