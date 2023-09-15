@@ -11,7 +11,7 @@ require (
 	github.com/roadrunner-server/errors v1.3.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache v0.43.0
 	go.opentelemetry.io/otel/sdk v1.18.0
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 )
 
 require (
