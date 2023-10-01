@@ -12,20 +12,14 @@ import (
 	"time"
 
 	kvProto "github.com/roadrunner-server/api/v4/build/kv/v1"
-	"github.com/roadrunner-server/boltdb/v4"
 	"github.com/roadrunner-server/config/v4"
 	"github.com/roadrunner-server/endure/v2"
 	goridgeRpc "github.com/roadrunner-server/goridge/v3/pkg/rpc"
 	"github.com/roadrunner-server/kv/v4"
 	"github.com/roadrunner-server/logger/v4"
 	"github.com/roadrunner-server/memcached/v4"
-	"github.com/roadrunner-server/memory/v4"
-	"github.com/roadrunner-server/redis/v4"
 	rpcPlugin "github.com/roadrunner-server/rpc/v4"
-	mock_logger "github.com/roadrunner-server/rr-e2e-tests/mock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 func TestMemcached(t *testing.T) {
