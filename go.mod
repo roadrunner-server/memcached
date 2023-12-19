@@ -2,7 +2,7 @@ module github.com/roadrunner-server/memcached/v4
 
 go 1.21
 
-toolchain go1.21.1
+toolchain go1.21.5
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
