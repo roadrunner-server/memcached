@@ -225,7 +225,7 @@ func (d *Driver) TTL(_ ...string) (map[string]string, error) {
 }
 
 func (d *Driver) Delete(keys ...string) error {
-	const op = errors.Op("memcached_plugin_has")
+	const op = errors.Op("memcached_plugin_delete")
 	if keys == nil {
 		return errors.E(op, errors.NoKeys)
 	}
@@ -255,7 +255,7 @@ func (d *Driver) Delete(keys ...string) error {
 func (d *Driver) Clear() error {
 	err := d.client.DeleteAll()
 	if err != nil {
-		d.log.Error("flush_all operation failed", zap.Error(err))
+		d.log.Error("Clear (delete_all) operation failed", zap.Error(err))
 		return err
 	}
 
