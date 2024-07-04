@@ -12,12 +12,12 @@ import (
 	"time"
 
 	kvProto "github.com/roadrunner-server/api/v4/build/kv/v1"
-	"github.com/roadrunner-server/config/v4"
+	"github.com/roadrunner-server/config/v5"
 	"github.com/roadrunner-server/endure/v2"
 	goridgeRpc "github.com/roadrunner-server/goridge/v3/pkg/rpc"
-	"github.com/roadrunner-server/kv/v4"
+	"github.com/roadrunner-server/kv/v5"
 	"github.com/roadrunner-server/logger/v4"
-	"github.com/roadrunner-server/memcached/v4"
+	"github.com/roadrunner-server/memcached/v5"
 	rpcPlugin "github.com/roadrunner-server/rpc/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,9 +26,8 @@ func TestMemcached(t *testing.T) {
 	cont := endure.New(slog.LevelDebug)
 
 	cfg := &config.Plugin{
-		Version: "2.9.0",
+		Version: "2024.2.0",
 		Path:    "configs/.rr-memcached.yaml",
-		Prefix:  "rr",
 	}
 
 	err := cont.RegisterAll(

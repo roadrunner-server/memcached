@@ -4,7 +4,7 @@ import (
 	"github.com/roadrunner-server/api/v4/plugins/v1/kv"
 	"github.com/roadrunner-server/endure/v2/dep"
 	"github.com/roadrunner-server/errors"
-	"github.com/roadrunner-server/memcached/v4/memcachedkv"
+	"github.com/roadrunner-server/memcached/v5/memcachedkv"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )

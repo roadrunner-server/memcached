@@ -16,7 +16,7 @@ import (
 type Configurer interface {
 	// UnmarshalKey takes a single key and unmarshal it into a Struct.
 	UnmarshalKey(name string, out any) error
-	// Has checks if config section exists.
+	// Has checks if a config section exists.
 	Has(name string) bool
 }
 
@@ -55,7 +55,7 @@ func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer, trace
 	return s, nil
 }
 
-// Has checks the key for existence
+// Has checked the key for existence
 func (d *Driver) Has(keys ...string) (map[string]bool, error) {
 	const op = errors.Op("memcached_plugin_has")
 	if keys == nil {
@@ -205,10 +205,13 @@ func (d *Driver) MExpire(items ...kv.Item) error {
 			return errors.E(op, err)
 		}
 
-		// Touch updates the expiry for the given key. The seconds parameter is either
+		// Touch updates the expiry for the given key.
+		// The second parameter is either
 		// a Unix timestamp or, if seconds is less than 1 month, the number of seconds
-		// into the future at which time the item will expire. Zero means the item has
-		// no expiration time. ErrCacheMiss is returned if the key is not in the cache.
+		// into the future at which time the item will expire.
+		// Zero means the item has
+		// no expiration time.
+		// ErrCacheMiss is returned if the key is not in the cache.
 		// The key must be at most 250 bytes in length.
 		err = d.client.Touch(items[i].Key(), int32(t.Unix()))
 		if err != nil {
