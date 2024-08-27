@@ -174,7 +174,7 @@ func (d *Driver) Set(items ...kv.Item) error {
 			if err != nil {
 				return err
 			}
-			memcachedItem.Expiration = int32(t.Unix())
+			memcachedItem.Expiration = int32(t.Unix()) //nolint:gosec
 		}
 
 		err := d.client.Set(memcachedItem)
@@ -213,7 +213,7 @@ func (d *Driver) MExpire(items ...kv.Item) error {
 		// no expiration time.
 		// ErrCacheMiss is returned if the key is not in the cache.
 		// The key must be at most 250 bytes in length.
-		err = d.client.Touch(items[i].Key(), int32(t.Unix()))
+		err = d.client.Touch(items[i].Key(), int32(t.Unix())) //nolint:gosec
 		if err != nil {
 			return errors.E(op, err)
 		}
