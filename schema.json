@@ -1,0 +1,24 @@
+{
+  "$id": "https://raw.githubusercontent.com/roadrunner-server/memcached/refs/heads/master/schema.json",
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "description": "All the valid configuration parameters for the Memcached plugin for RoadRunner.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "addr": {
+      "description": "Addresses of the memcached node(s).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "examples": [
+          "localhost:11211"
+        ]
+      },
+      "default": [
+        "localhost:11211"
+      ]
+    }
+  }
+}
