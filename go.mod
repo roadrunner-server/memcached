@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
-	github.com/roadrunner-server/api/v4 v4.16.0
+	github.com/roadrunner-server/api/v4 v4.17.0
 	github.com/roadrunner-server/endure/v2 v2.6.1
 	github.com/roadrunner-server/errors v1.4.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache v0.43.0
