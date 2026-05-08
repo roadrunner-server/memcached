@@ -17,7 +17,7 @@ import (
 	goridgeRpc "github.com/roadrunner-server/goridge/v3/pkg/rpc"
 	"github.com/roadrunner-server/kv/v5"
 	"github.com/roadrunner-server/logger/v5"
-	"github.com/roadrunner-server/memcached/v5"
+	"github.com/roadrunner-server/memcached/v6"
 	rpcPlugin "github.com/roadrunner-server/rpc/v5"
 	"github.com/stretchr/testify/assert"
 )

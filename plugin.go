@@ -1,10 +1,12 @@
 package memcached
 
 import (
-	"github.com/roadrunner-server/api/v4/plugins/v1/kv"
+	"context"
+
+	"github.com/roadrunner-server/api-plugins/v6/kv"
 	"github.com/roadrunner-server/endure/v2/dep"
 	"github.com/roadrunner-server/errors"
-	"github.com/roadrunner-server/memcached/v5/memcachedkv"
+	"github.com/roadrunner-server/memcached/v6/memcachedkv"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/zap"
 )
@@ -62,7 +64,7 @@ func (p *Plugin) Collects() []*dep.In {
 	}
 }
 
-func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
+func (p *Plugin) KvFromConfig(_ context.Context, key string) (kv.Storage, error) {
 	const op = errors.Op("memcachedkv_plugin_provide")
 	st, err := memcachedkv.NewMemcachedDriver(p.log, key, p.cfgPlugin, p.tracer)
 	if err != nil {

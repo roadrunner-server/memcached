@@ -1,12 +1,13 @@
 package memcachedkv
 
 import (
+	"context"
 	stderr "errors"
 	"strings"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/roadrunner-server/api/v4/plugins/v1/kv"
+	"github.com/roadrunner-server/api-plugins/v6/kv"
 	"github.com/roadrunner-server/errors"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -56,7 +57,7 @@ func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer, trace
 }
 
 // Has checked the key for existence
-func (d *Driver) Has(keys ...string) (map[string]bool, error) {
+func (d *Driver) Has(_ context.Context, keys ...string) (map[string]bool, error) {
 	const op = errors.Op("memcached_plugin_has")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -85,7 +86,7 @@ func (d *Driver) Has(keys ...string) (map[string]bool, error) {
 
 // Get gets the item for the given key. ErrCacheMiss is returned for a
 // memcache cache miss. The key must be at most 250 bytes in length.
-func (d *Driver) Get(key string) ([]byte, error) {
+func (d *Driver) Get(_ context.Context, key string) ([]byte, error) {
 	const op = errors.Op("memcached_plugin_get")
 	// to get cases like "  "
 	keyTrimmed := strings.TrimSpace(key)
@@ -110,7 +111,7 @@ func (d *Driver) Get(key string) ([]byte, error) {
 
 // MGet return map with key -- string
 // and map value as value -- []byte
-func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
+func (d *Driver) MGet(_ context.Context, keys ...string) (map[string][]byte, error) {
 	const op = errors.Op("memcached_plugin_mget")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -148,7 +149,7 @@ func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
 // Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *Driver) Set(items ...kv.Item) error {
+func (d *Driver) Set(_ context.Context, items ...kv.Item) error {
 	const op = errors.Op("memcached_plugin_set")
 	if items == nil {
 		return errors.E(op, errors.NoKeys)
@@ -189,7 +190,7 @@ func (d *Driver) Set(items ...kv.Item) error {
 // MExpire Expiration is the cache expiration time, in seconds: either a relative
 // time from now (up to 1 month), or an absolute Unix epoch time.
 // Zero means the Item has no expiration time.
-func (d *Driver) MExpire(items ...kv.Item) error {
+func (d *Driver) MExpire(_ context.Context, items ...kv.Item) error {
 	const op = errors.Op("memcached_plugin_mexpire")
 	for i := range items {
 		if items[i] == nil {
@@ -222,12 +223,12 @@ func (d *Driver) MExpire(items ...kv.Item) error {
 }
 
 // TTL return time in seconds (int32) for a given keys
-func (d *Driver) TTL(_ ...string) (map[string]string, error) {
+func (d *Driver) TTL(_ context.Context, _ ...string) (map[string]string, error) {
 	const op = errors.Op("memcached_plugin_ttl")
 	return nil, errors.E(op, errors.Str("not valid request for memcached, see https://github.com/memcached/memcached/issues/239"))
 }
 
-func (d *Driver) Delete(keys ...string) error {
+func (d *Driver) Delete(_ context.Context, keys ...string) error {
 	const op = errors.Op("memcached_plugin_delete")
 	if keys == nil {
 		return errors.E(op, errors.NoKeys)
@@ -255,7 +256,7 @@ func (d *Driver) Delete(keys ...string) error {
 	return nil
 }
 
-func (d *Driver) Clear() error {
+func (d *Driver) Clear(_ context.Context) error {
 	err := d.client.DeleteAll()
 	if err != nil {
 		d.log.Error("Clear (delete_all) operation failed", zap.Error(err))
@@ -265,6 +266,6 @@ func (d *Driver) Clear() error {
 	return nil
 }
 
-func (d *Driver) Stop() {
+func (d *Driver) Stop(_ context.Context) {
 	// not implemented https://github.com/bradfitz/gomemcache/issues/51
 }
