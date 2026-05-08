@@ -3,6 +3,7 @@ package memcachedkv
 import (
 	"context"
 	stderr "errors"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/roadrunner-server/errors"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/bradfitz/gomemcache/memcache/otelmemcache"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.uber.org/zap"
 )
 
 type Configurer interface {
@@ -23,7 +23,7 @@ type Configurer interface {
 
 type Driver struct {
 	client *otelmemcache.Client
-	log    *zap.Logger
+	log    *slog.Logger
 	cfg    *Config
 	tracer *sdktrace.TracerProvider
 }
@@ -31,7 +31,7 @@ type Driver struct {
 // NewMemcachedDriver returns a memcache client using the provided server(s)
 // with equal weight. If a server is listed multiple times,
 // it gets a proportional amount of weight.
-func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin Configurer, tracer *sdktrace.TracerProvider) (*Driver, error) {
+func NewMemcachedDriver(log *slog.Logger, key string, cfgPlugin Configurer, tracer *sdktrace.TracerProvider) (*Driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
 	s := &Driver{
@@ -259,7 +259,7 @@ func (d *Driver) Delete(_ context.Context, keys ...string) error {
 func (d *Driver) Clear(_ context.Context) error {
 	err := d.client.DeleteAll()
 	if err != nil {
-		d.log.Error("Clear (delete_all) operation failed", zap.Error(err))
+		d.log.Error("Clear (delete_all) operation failed", "error", err)
 		return err
 	}
 

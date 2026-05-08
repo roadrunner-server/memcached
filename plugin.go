@@ -2,13 +2,13 @@ package memcached
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/roadrunner-server/api-plugins/v6/kv"
 	"github.com/roadrunner-server/endure/v2/dep"
 	"github.com/roadrunner-server/errors"
 	"github.com/roadrunner-server/memcached/v6/memcachedkv"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.uber.org/zap"
 )
 
 const (
@@ -24,7 +24,7 @@ type Configurer interface {
 }
 
 type Logger interface {
-	NamedLogger(name string) *zap.Logger
+	NamedLogger(name string) *slog.Logger
 }
 
 // Tracer is a plugin (OTEL) interface that provides tracer
@@ -34,7 +34,7 @@ type Tracer interface {
 
 type Plugin struct {
 	// logger
-	log *zap.Logger
+	log *slog.Logger
 	// config plugin
 	cfgPlugin Configurer
 	tracer    *sdktrace.TracerProvider
