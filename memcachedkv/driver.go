@@ -34,6 +34,10 @@ type Driver struct {
 func NewMemcachedDriver(log *slog.Logger, key string, cfgPlugin Configurer, tracer *sdktrace.TracerProvider) (*Driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
+	if tracer == nil {
+		tracer = sdktrace.NewTracerProvider()
+	}
+
 	s := &Driver{
 		log:    log,
 		tracer: tracer,
