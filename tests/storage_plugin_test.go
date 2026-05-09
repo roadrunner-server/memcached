@@ -14,7 +14,7 @@ import (
 	kvProto "github.com/roadrunner-server/api/v4/build/kv/v1"
 	"github.com/roadrunner-server/config/v5"
 	"github.com/roadrunner-server/endure/v2"
-	goridgeRpc "github.com/roadrunner-server/goridge/v3/pkg/rpc"
+	goridgeRpc "github.com/roadrunner-server/goridge/v4/pkg/rpc"
 	"github.com/roadrunner-server/kv/v5"
 	"github.com/roadrunner-server/logger/v5"
 	"github.com/roadrunner-server/memcached/v6"
