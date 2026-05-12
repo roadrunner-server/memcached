@@ -12,7 +12,7 @@ require (
 	github.com/roadrunner-server/kv/v6 v6.0.0-beta.4
 	github.com/roadrunner-server/logger/v6 v6.0.0-beta.3
 	github.com/roadrunner-server/memcached/v6 v6.0.0
-	github.com/roadrunner-server/rpc/v6 v6.0.0-beta.3
+	github.com/roadrunner-server/rpc/v6 v6.0.0-beta.4
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.11
 )
@@ -20,6 +20,8 @@ require (
 replace github.com/roadrunner-server/memcached/v6 => ../
 
 require (
+	connectrpc.com/connect v1.19.2 // indirect
+	connectrpc.com/grpcreflect v1.3.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
