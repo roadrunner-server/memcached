@@ -2,24 +2,26 @@ module tests
 
 go 1.26
 
-toolchain go1.26.0
+toolchain go1.26.3
 
 require (
-	github.com/roadrunner-server/api-go/v6 v6.0.0-beta.4
+	connectrpc.com/connect v1.20.0
+	github.com/roadrunner-server/api-go/v6 v6.0.0-beta.12
 	github.com/roadrunner-server/config/v6 v6.0.0-beta.3
 	github.com/roadrunner-server/endure/v2 v2.6.2
-	github.com/roadrunner-server/goridge/v4 v4.0.0-beta.1
-	github.com/roadrunner-server/kv/v6 v6.0.0-beta.4
+	github.com/roadrunner-server/kv/v6 v6.0.0-beta.5
 	github.com/roadrunner-server/logger/v6 v6.0.0-beta.3
 	github.com/roadrunner-server/memcached/v6 v6.0.0
-	github.com/roadrunner-server/rpc/v6 v6.0.0-beta.3
+	github.com/roadrunner-server/rpc/v6 v6.0.0-beta.4
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/net v0.55.0
 	google.golang.org/protobuf v1.36.11
 )
 
 replace github.com/roadrunner-server/memcached/v6 => ../
 
 require (
+	connectrpc.com/grpcreflect v1.3.0 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -52,7 +54,9 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60 // indirect
+	google.golang.org/grpc v1.81.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
