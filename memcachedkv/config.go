@@ -6,7 +6,7 @@ type Config struct {
 }
 
 func (s *Config) InitDefaults() {
-	if s.Addr == nil {
+	if len(s.Addr) == 0 {
 		s.Addr = []string{"127.0.0.1:11211"} // default url for memcached
 	}
 }
