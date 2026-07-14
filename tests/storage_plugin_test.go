@@ -1,11 +1,9 @@
 package kv
 
 import (
-	"context"
-	"crypto/tls"
 	"log/slog"
 	"net"
-	"net/http"
+	"net/rpc"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,30 +11,36 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
 	kvProto "github.com/roadrunner-server/api-go/v6/kv/v2"
-	"github.com/roadrunner-server/api-go/v6/kv/v2/kvV2connect"
 	"github.com/roadrunner-server/config/v6"
 	"github.com/roadrunner-server/endure/v2"
+	goridgeRpc "github.com/roadrunner-server/goridge/v4/pkg/rpc"
 	"github.com/roadrunner-server/kv/v6"
 	"github.com/roadrunner-server/logger/v6"
 	"github.com/roadrunner-server/memcached/v6"
 	rpcPlugin "github.com/roadrunner-server/rpc/v6"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/http2"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-func newKVClient(t *testing.T, address string) kvV2connect.KvServiceClient {
+func newRPCClient(t *testing.T, address string) *rpc.Client {
 	t.Helper()
-	httpc := &http.Client{Transport: &http2.Transport{
-		AllowHTTP: true,
-		DialTLSContext: func(ctx context.Context, network, addr string, _ *tls.Config) (net.Conn, error) {
-			return new(net.Dialer).DialContext(ctx, network, addr)
-		},
-	}}
-	t.Cleanup(httpc.CloseIdleConnections)
-	return kvV2connect.NewKvServiceClient(httpc, "http://"+address)
+
+	var conn net.Conn
+	var err error
+	d := &net.Dialer{}
+	for range 10 {
+		conn, err = d.DialContext(t.Context(), "tcp", address)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Millisecond * 200)
+	}
+	assert.NoError(t, err)
+
+	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+	t.Cleanup(func() { _ = client.Close() })
+	return client
 }
 
 func TestMemcached(t *testing.T) {
@@ -106,8 +110,7 @@ func TestMemcached(t *testing.T) {
 func testRPCMethodsMemcached(t *testing.T) {
 	const storage = "memcached-rr"
 
-	client := newKVClient(t, "127.0.0.1:6001")
-	ctx := t.Context()
+	client := newRPCClient(t, "127.0.0.1:6001")
 
 	tt := durationpb.New(time.Second * 5)
 
@@ -131,23 +134,26 @@ func testRPCMethodsMemcached(t *testing.T) {
 		},
 	}
 
-	_, err := client.Set(ctx, connect.NewRequest(data))
+	err := client.Call("kv.Set", data, &kvProto.KvResponse{})
 	assert.NoError(t, err)
 
-	resp, err := client.Has(ctx, connect.NewRequest(keys))
+	resp := &kvProto.KvResponse{}
+	err = client.Call("kv.Has", keys, resp)
 	assert.NoError(t, err)
-	assert.Len(t, resp.Msg.GetItems(), 3)
+	assert.Len(t, resp.GetItems(), 3)
 
 	// key "c" should be deleted
 	time.Sleep(time.Second * 7)
 
-	resp, err = client.Has(ctx, connect.NewRequest(keys))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.Has", keys, resp)
 	assert.NoError(t, err)
-	assert.Len(t, resp.Msg.GetItems(), 2)
+	assert.Len(t, resp.GetItems(), 2)
 
-	resp, err = client.MGet(ctx, connect.NewRequest(keys))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.MGet", keys, resp)
 	assert.NoError(t, err)
-	assert.Len(t, resp.Msg.GetItems(), 2) // c is expired
+	assert.Len(t, resp.GetItems(), 2) // c is expired
 
 	tt2 := durationpb.New(time.Second * 10)
 
@@ -160,7 +166,7 @@ func testRPCMethodsMemcached(t *testing.T) {
 		},
 	}
 
-	_, err = client.MExpire(ctx, connect.NewRequest(data2))
+	err = client.Call("kv.MExpire", data2, &kvProto.KvResponse{})
 	assert.NoError(t, err)
 
 	keys2 := &kvProto.KvRequest{
@@ -173,26 +179,28 @@ func testRPCMethodsMemcached(t *testing.T) {
 	}
 
 	// TTL is not supported by the memcached driver
-	_, err = client.TTL(ctx, connect.NewRequest(keys2))
+	err = client.Call("kv.TTL", keys2, &kvProto.KvResponse{})
 	assert.Error(t, err)
 
 	// HAS AFTER TTL
 	time.Sleep(time.Second * 15)
-	resp, err = client.Has(ctx, connect.NewRequest(keys2))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.Has", keys2, resp)
 	assert.NoError(t, err)
-	assert.Empty(t, resp.Msg.GetItems())
+	assert.Empty(t, resp.GetItems())
 
 	keysDel := &kvProto.KvRequest{
 		Storage: storage,
 		Items:   []*kvProto.KvItem{{Key: "e"}},
 	}
 
-	_, err = client.Delete(ctx, connect.NewRequest(keysDel))
+	err = client.Call("kv.Delete", keysDel, &kvProto.KvResponse{})
 	assert.NoError(t, err)
 
-	resp, err = client.Has(ctx, connect.NewRequest(keysDel))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.Has", keysDel, resp)
 	assert.NoError(t, err)
-	assert.Empty(t, resp.Msg.GetItems())
+	assert.Empty(t, resp.GetItems())
 
 	dataClear := &kvProto.KvRequest{
 		Storage: storage,
@@ -205,18 +213,20 @@ func testRPCMethodsMemcached(t *testing.T) {
 		},
 	}
 
-	_, err = client.Set(ctx, connect.NewRequest(dataClear))
+	err = client.Call("kv.Set", dataClear, &kvProto.KvResponse{})
 	assert.NoError(t, err)
 
-	resp, err = client.Has(ctx, connect.NewRequest(dataClear))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.Has", dataClear, resp)
 	assert.NoError(t, err)
-	assert.Len(t, resp.Msg.GetItems(), 5)
+	assert.Len(t, resp.GetItems(), 5)
 
-	_, err = client.Clear(ctx, connect.NewRequest(&kvProto.KvRequest{Storage: storage}))
+	err = client.Call("kv.Clear", &kvProto.KvRequest{Storage: storage}, &kvProto.KvResponse{})
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second * 2)
-	resp, err = client.Has(ctx, connect.NewRequest(dataClear))
+	resp = &kvProto.KvResponse{}
+	err = client.Call("kv.Has", dataClear, resp)
 	assert.NoError(t, err)
-	assert.Empty(t, resp.Msg.GetItems())
+	assert.Empty(t, resp.GetItems())
 }
