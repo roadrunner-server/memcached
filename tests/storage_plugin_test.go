@@ -36,7 +36,9 @@ func newRPCClient(t *testing.T, address string) *rpc.Client {
 		}
 		time.Sleep(time.Millisecond * 200)
 	}
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 	t.Cleanup(func() { _ = client.Close() })
