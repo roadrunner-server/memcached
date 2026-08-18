@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	kvProto "github.com/roadrunner-server/api-go/v6/kv/v2"
+	kvProto "github.com/roadrunner-server/api-go/v6/kv/v1"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
@@ -26,14 +25,14 @@ const (
 func TestKeyExpiresAfterTTL(t *testing.T) {
 	client := bootKV(t)
 
-	req := &kvProto.KvRequest{
+	req := &kvProto.Request{
 		Storage: storage,
-		Items: []*kvProto.KvItem{
+		Items: []*kvProto.Item{
 			{Key: "permanent", Value: []byte("v")},
-			{Key: "ephemeral", Value: []byte("v"), Ttl: durationpb.New(shortTTL)},
+			{Key: "ephemeral", Value: []byte("v"), Timeout: time.Now().UTC().Add(shortTTL).Format(time.RFC3339)},
 		},
 	}
-	require.NoError(t, client.Call("kv.Set", req, &kvProto.KvResponse{}))
+	require.NoError(t, client.Call("kv.Set", req, &kvProto.Response{}))
 
 	require.Equal(t, 2, has(t, client, "permanent", "ephemeral"), "both keys should be present right after Set")
 
@@ -49,16 +48,16 @@ func TestKeyExpiresAfterTTL(t *testing.T) {
 func TestMExpireAppliesTTLToExistingKeys(t *testing.T) {
 	client := bootKV(t)
 
-	require.NoError(t, client.Call("kv.Set", items(map[string]string{"a": "aa", "b": "bb"}), &kvProto.KvResponse{}))
+	require.NoError(t, client.Call("kv.Set", items(map[string]string{"a": "aa", "b": "bb"}), &kvProto.Response{}))
 
-	expire := &kvProto.KvRequest{
+	expire := &kvProto.Request{
 		Storage: storage,
-		Items: []*kvProto.KvItem{
-			{Key: "a", Ttl: durationpb.New(shortTTL)},
-			{Key: "b", Ttl: durationpb.New(shortTTL)},
+		Items: []*kvProto.Item{
+			{Key: "a", Timeout: time.Now().UTC().Add(shortTTL).Format(time.RFC3339)},
+			{Key: "b", Timeout: time.Now().UTC().Add(shortTTL).Format(time.RFC3339)},
 		},
 	}
-	require.NoError(t, client.Call("kv.MExpire", expire, &kvProto.KvResponse{}))
+	require.NoError(t, client.Call("kv.MExpire", expire, &kvProto.Response{}))
 
 	require.Eventually(t, func() bool {
 		return has(t, client, "a", "b") == 0
@@ -71,9 +70,9 @@ func TestMExpireAppliesTTLToExistingKeys(t *testing.T) {
 func TestTTLIsNotSupported(t *testing.T) {
 	client := bootKV(t)
 
-	require.NoError(t, client.Call("kv.Set", items(map[string]string{"a": "aa"}), &kvProto.KvResponse{}))
+	require.NoError(t, client.Call("kv.Set", items(map[string]string{"a": "aa"}), &kvProto.Response{}))
 
-	err := client.Call("kv.TTL", keys("a"), &kvProto.KvResponse{})
+	err := client.Call("kv.TTL", keys("a"), &kvProto.Response{})
 
 	require.Error(t, err)
 }
