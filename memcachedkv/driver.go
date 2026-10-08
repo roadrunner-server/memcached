@@ -24,8 +24,6 @@ type Configurer interface {
 type Driver struct {
 	client *otelmemcache.Client
 	log    *slog.Logger
-	cfg    *Config
-	tracer *sdktrace.TracerProvider
 }
 
 // NewMemcachedDriver returns a memcache client using the provided server(s)
@@ -38,26 +36,23 @@ func NewMemcachedDriver(log *slog.Logger, key string, cfgPlugin Configurer, trac
 		tracer = sdktrace.NewTracerProvider()
 	}
 
-	s := &Driver{
-		log:    log,
-		tracer: tracer,
-	}
-
-	err := cfgPlugin.UnmarshalKey(key, &s.cfg)
+	var cfg *Config
+	err := cfgPlugin.UnmarshalKey(key, &cfg)
 	if err != nil {
 		return nil, rrerrors.E(op, err)
 	}
 
-	if s.cfg == nil {
+	if cfg == nil {
 		return nil, rrerrors.E(op, rrerrors.Errorf("config not found by provided key: %s", key))
 	}
 
-	s.cfg.InitDefaults()
+	cfg.InitDefaults()
 
-	client := memcache.New(s.cfg.Addr...)
-	s.client = otelmemcache.NewClientWithTracing(client, otelmemcache.WithTracerProvider(tracer))
-
-	return s, nil
+	client := memcache.New(cfg.Addr...)
+	return &Driver{
+		client: otelmemcache.NewClientWithTracing(client, otelmemcache.WithTracerProvider(tracer)),
+		log:    log,
+	}, nil
 }
 
 // Has checked the key for existence
