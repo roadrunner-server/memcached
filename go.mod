@@ -6,7 +6,7 @@ toolchain go1.27.1
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20260422231931-4d751bb6e37c
-	github.com/roadrunner-server/api-plugins/v6 v6.0.0-beta.2
+	github.com/roadrunner-server/api-plugins/v6 v6.0.0
 	github.com/roadrunner-server/endure/v2 v2.6.2
 	github.com/roadrunner-server/errors v1.6.0
 	github.com/stretchr/testify v1.12.1
